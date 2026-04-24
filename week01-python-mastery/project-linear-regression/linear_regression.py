@@ -54,6 +54,16 @@ class LinearRegressionFromScratch:
         r2 = 1 - (ss_res / ss_tot)
         logger.info(f"R² Score: {r2:.4f}")
         return r2
+    def get_parameters(self):
+        """Return the learned bias and weights."""
+        return {
+            "bias": self.bias,
+            "weights": self.weights
+        }
+
+
+
+
 
 # ------------------- Improved Test with Train/Test Split -------------------
 # ------------------- Improved Test with Train/Test Split + Plot -------------------
@@ -76,6 +86,8 @@ if __name__ == "__main__":
     
     X_new = np.array([[0], [1], [2]])
     print("Predictions for new data:", model.predict(X_new))
+    params = model.get_parameters()
+    print("Learned parameters:", params)
 
     # === VISUALIZATION ===
     import matplotlib.pyplot as plt
@@ -112,4 +124,3 @@ if __name__ == "__main__":
     plt.grid(True)
     plt.savefig('linear_regression_plot.png')
     print("✅ Plot saved as 'linear_regression_plot.png'")
-    # plt.show()  # commented out because of WSL
