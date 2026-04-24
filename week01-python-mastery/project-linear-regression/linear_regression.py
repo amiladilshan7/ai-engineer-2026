@@ -13,7 +13,6 @@ Architecture Principles:
 
 import logging
 import numpy as np
-from typing import Tuple
 
 # ------------------- Logging Setup -------------------
 logging.basicConfig(
@@ -31,17 +30,8 @@ class LinearRegressionFromScratch:
         logger.info("LinearRegressionFromScratch model initialized")
 
     def fit(self, X: np.ndarray, y: np.ndarray) -> None:
-        """
-        Train the model using Normal Equation: w = (X^T X)^-1 X^T y
-        X shape: (n_samples, n_features)
-        y shape: (n_samples,)
-        """
         logger.info(f"Starting training on {X.shape[0]} samples, {X.shape[1]} features")
-
-        # Add bias term (column of 1s)
         X_b = np.c_[np.ones((X.shape[0], 1)), X]
-
-        # Normal Equation
         try:
             theta = np.linalg.inv(X_b.T @ X_b) @ X_b.T @ y
             self.bias = theta[0]
@@ -52,15 +42,12 @@ class LinearRegressionFromScratch:
             raise
 
     def predict(self, X: np.ndarray) -> np.ndarray:
-        """Make predictions."""
         if self.weights is None:
             raise ValueError("Model must be trained first. Call fit() before predict().")
-        
         X_b = np.c_[np.ones((X.shape[0], 1)), X]
         return X_b @ np.r_[self.bias, self.weights]
 
     def score(self, X: np.ndarray, y: np.ndarray) -> float:
-        """Return R² score (coefficient of determination)."""
         y_pred = self.predict(X)
         ss_res = np.sum((y - y_pred) ** 2)
         ss_tot = np.sum((y - np.mean(y)) ** 2)
@@ -68,22 +55,61 @@ class LinearRegressionFromScratch:
         logger.info(f"R² Score: {r2:.4f}")
         return r2
 
-
-# ------------------- Quick Test with Synthetic Data -------------------
+# ------------------- Improved Test with Train/Test Split -------------------
+# ------------------- Improved Test with Train/Test Split + Plot -------------------
 if __name__ == "__main__":
-    # Generate simple synthetic data: y = 3*X + 7 + noise
     np.random.seed(42)
-    X = 2 * np.random.rand(100, 1)          # 100 samples, 1 feature
-    y = 3 * X.squeeze() + 7 + np.random.randn(100) * 0.5
+    X = 2 * np.random.rand(200, 1)
+    y = 3 * X.squeeze() + 7 + np.random.randn(200) * 0.5
+
+    split_idx = int(0.8 * len(X))
+    X_train, X_test = X[:split_idx], X[split_idx:]
+    y_train, y_test = y[:split_idx], y[split_idx:]
 
     model = LinearRegressionFromScratch()
-    model.fit(X, y)
+    model.fit(X_train, y_train)
     
-    # Test prediction
-    X_test = np.array([[0], [1], [2]])
-    predictions = model.predict(X_test)
-    print("Predictions for X = [[0], [1], [2]]:", predictions)
+    r2_train = model.score(X_train, y_train)
+    r2_test = model.score(X_test, y_test)
+    print(f"R² on Train: {r2_train:.4f}")
+    print(f"R² on Test : {r2_test:.4f}")
     
-    # Score
-    r2 = model.score(X, y)
-    print(f"Final R² on training data: {r2:.4f}")
+    X_new = np.array([[0], [1], [2]])
+    print("Predictions for new data:", model.predict(X_new))
+
+    # === VISUALIZATION ===
+    import matplotlib.pyplot as plt
+    plt.figure(figsize=(8, 5))
+    plt.scatter(X_train, y_train, color='blue', label='Training data')
+    plt.scatter(X_test, y_test, color='green', label='Test data')
+    
+    # Plot the regression line
+    X_plot = np.linspace(0, 2, 100).reshape(-1, 1)
+    y_plot = model.predict(X_plot)
+    plt.plot(X_plot, y_plot, color='red', linewidth=3, label='Regression Line')
+    
+    plt.xlabel('X')
+    plt.ylabel('y')
+    plt.title('Linear Regression from Scratch')
+    plt.legend()
+    plt.grid(True)
+    plt.show()
+
+    # === SAVE PLOT AS PNG (works in WSL) ===
+    import matplotlib.pyplot as plt
+    plt.figure(figsize=(8, 5))
+    plt.scatter(X_train, y_train, color='blue', label='Training data')
+    plt.scatter(X_test, y_test, color='green', label='Test data')
+    
+    X_plot = np.linspace(0, 2, 100).reshape(-1, 1)
+    y_plot = model.predict(X_plot)
+    plt.plot(X_plot, y_plot, color='red', linewidth=3, label='Regression Line')
+    
+    plt.xlabel('X')
+    plt.ylabel('y')
+    plt.title('Linear Regression from Scratch (Amila)')
+    plt.legend()
+    plt.grid(True)
+    plt.savefig('linear_regression_plot.png')
+    print("✅ Plot saved as 'linear_regression_plot.png'")
+    # plt.show()  # commented out because of WSL
